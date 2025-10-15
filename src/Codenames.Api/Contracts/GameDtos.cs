@@ -10,6 +10,7 @@ public sealed record SubmitClueRequest(string Clue, int Count, Team Team);
 public sealed record SubmitClueResponse(Guid GameId, string Clue, int Count, Team Team, GamePhase Phase);
 public sealed record GuessRequest(Team Team, int Position);
 public sealed record GuessResponse(Guid GameId, int Position, string Outcome, bool TurnEnded, bool GameEnded, Team? Winner, GamePhase Phase, IReadOnlyList<GameCardDto> Board, int RedAgentsRemaining, int BlueAgentsRemaining, int CurrentClueGuesses, int MaxGuesses);
+public sealed record EndTurnRequest(Team Team);
 public sealed record GameStateResponse(Guid GameId, Team StartingTeam, Team CurrentTeam, GamePhase Phase, int RedAgentsRemaining, int BlueAgentsRemaining, Team? Winner, IReadOnlyList<GameCardDto> Board, IReadOnlyList<ClueDto> Clues, int? CurrentClueGuesses, int? CurrentClueMaxGuesses);
 public sealed record ClueDto(string Text, int DeclaredCount, Team Team, DateTime Timestamp);
 

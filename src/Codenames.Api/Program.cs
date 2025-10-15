@@ -97,4 +97,20 @@ app.MapPost("/games/{id:guid}/guesses", (Guid id, GuessRequest req, IGameReposit
     }
 });
 
+app.MapPost("/games/{id:guid}/endturn", (Guid id, EndTurnRequest req, IGameRepository repo, GameService service) =>
+{
+    var game = repo.Get(id);
+    if (game is null) return Results.NotFound();
+    try
+    {
+        service.EndTurn(game, req.Team);
+        repo.Update(game);
+        return Results.Ok(game.ToStateResponse(includeTypes: false));
+    }
+    catch (DomainException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
 app.Run();

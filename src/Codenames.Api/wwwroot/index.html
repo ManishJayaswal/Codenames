@@ -113,6 +113,7 @@
     <div>Current Clue: <span id="currentClue">-</span></div>
     <div>Guesses: <span id="guessProgress">-</span></div>
     <div class="winner" id="winner"></div>
+    <button id="endTurnBtn" class="secondary" disabled style="margin-top:.6rem;">End Turn</button>
   </div>
 </div>
 <div class="boards-wrapper">
@@ -146,6 +147,7 @@ const currentTeamEl = document.getElementById('currentTeam');
 const currentClueEl = document.getElementById('currentClue');
 const guessProgressEl = document.getElementById('guessProgress');
 const winnerEl = document.getElementById('winner');
+const endTurnBtn = document.getElementById('endTurnBtn');
 const clueLogEl = document.getElementById('clueLog');
 const gameIdDisplay = document.getElementById('gameIdDisplay');
 const spymasterChk = document.getElementById('spymasterChk');
@@ -195,6 +197,7 @@ function renderOperatives(state){
   currentClueEl.textContent = latestClue ? `${latestClue.text} (${latestClue.declaredCount})` : '-';
   guessProgressEl.textContent = state.currentClueGuesses != null ? `${state.currentClueGuesses}/${state.currentClueMaxGuesses}` : '-';
   submitClueBtn.disabled = !(state.phase === 'AwaitingClue');
+  endTurnBtn.disabled = !(state.phase === 'AwaitingGuesses' && state.currentTeam === startTeamEl.value && !state.winner);
 
   boardEl.innerHTML='';
   state.board.forEach(card => {
@@ -208,6 +211,15 @@ function renderOperatives(state){
       div.style.cursor='pointer';
       div.onclick = () => makeGuess(card.position, div);
     }
+
+async function endTurn(){
+  if(!gameId) return;
+  const body = { team: startTeamEl.value };
+  const res = await fetch(`/games/${gameId}/endturn`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if(!res.ok){ alert('End turn error'); return; }
+  await refreshOperatives();
+  await refreshSpymaster();
+}
     boardEl.appendChild(div);
   });
 
@@ -262,6 +274,7 @@ async function makeGuess(position, element){
 newBtn.onclick = createGame;
 submitClueBtn.onclick = submitClue;
 spymasterChk.onchange = () => { refreshSpymaster(); };
+endTurnBtn.onclick = endTurn;
 
 createGame();
 setInterval(()=>{ refreshOperatives(); refreshSpymaster(); }, 4000);

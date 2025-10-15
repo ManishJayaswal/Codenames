@@ -101,4 +101,22 @@ public sealed class GameService
 
         return new GuessResult(position, outcome, team, turnEnds, gameEnded, winner);
     }
+
+    /// <summary>
+    /// Ends the current team's turn voluntarily during the guessing phase, passing control to the opponent.
+    /// Does nothing if the game already completed.
+    /// </summary>
+    public void EndTurn(Game game, Team team)
+    {
+        if (game is null) throw new ArgumentNullException(nameof(game));
+        if (game.Phase != GamePhase.AwaitingGuesses)
+            throw new InvalidPhaseException("EndTurn", GamePhase.AwaitingGuesses.ToString(), game.Phase.ToString());
+        if (team != game.CurrentTeam)
+            throw new TeamMismatchException($"Team {team} cannot end turn; current team is {game.CurrentTeam}.");
+        if (game.Winner is not null) return; // already finished
+
+        // Transition to awaiting next clue for the opposing team.
+        game.Phase = GamePhase.AwaitingClue;
+        game.CurrentTeam = team == Team.Red ? Team.Blue : Team.Red;
+    }
 }
