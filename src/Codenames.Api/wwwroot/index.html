@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Codenames</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+ body { font-family: system-ui, Arial, sans-serif; margin: 1rem; background:#f3f4f6; color:#111; }
+ header { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+ button { cursor:pointer; padding:.5rem .9rem; background:#2563eb; border:none; color:#fff; border-radius:4px; font-weight:600; }
+ button.secondary { background:#475569; }
+ button:disabled { opacity:.5; cursor:not-allowed; }
+ input, select { padding:.45rem .5rem; border-radius:4px; border:1px solid #475569; background:#1e2530; color:#fff; }
+ .panel { margin-top:1rem; display:flex; gap:2rem; flex-wrap:wrap; }
+ .col { min-width:220px; }
+ .submit-clue-form { display:flex; flex-direction:column; align-items:flex-start; gap:.55rem; }
+ .submit-clue-form label { display:flex; flex-direction:column; font-size:.8rem; font-weight:600; gap:.25rem; }
+ .submit-clue-form button { margin-top:.9rem; }
+ .counts span { display:inline-block; margin-right:1rem; }
+ .boards-wrapper { display:flex; gap:3rem; align-items:flex-start; margin-top:1.25rem; }
+ .board-column { min-width: 430px; }
+ .board-column h3 { margin:.2rem 0 .4rem; font-size:1rem; letter-spacing:.5px; font-weight:600; }
+ .board { display:grid; grid-template-columns:repeat(5, 1fr); gap:.6rem; max-width:880px; background:#d1d5db; padding:.75rem; border-radius:12px; }
+ .card { aspect-ratio: 1.45/1; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:.35rem; text-align:center; font-size:.75rem; font-weight:600; letter-spacing:.5px; position:relative; user-select:none; transition:background .25s, transform .15s; }
+ .card:hover { transform:translateY(-2px); }
+ .card.revealed { filter:brightness(1.15); }
+ /* High-contrast vivid team colors scoped ONLY to operatives board */
+ #board .type-RedAgent { background:#525252; }
+ #board .type-BlueAgent {background: #525252; }
+ #board .type-Neutral { background:#525252; }
+ #board .type-Assassin { background:#000; box-shadow:0 0 0 2px #fff inset; }
+ .covered { background:#2d3642; }
+ /* Spymaster board base card style (no tint) */
+ #spymasterBoard .card { border:2px solid #d1d5db; box-shadow:none; }
+/* Dark background container for spymaster board */
+#spymasterBoard { background:#1e2530 !important; border-radius:12px; }
+
+/* Lighter font color for all operative board cards */
+#board .card { color:#f5f7fa; }
+
+  /* Spymaster: differentiate light backgrounds, preserve original casing */
+  #spymasterBoard .card.type-RedAgent {
+        background:#ffe5e5 !important; /* light red */
+        color:#000000;
+        border:2px solid #f5c2c2;
+        font-weight:700;
+        box-shadow:none;
+    }
+  #spymasterBoard .card.type-BlueAgent {
+        background:#1e3a8a !important; /* dark blue */
+        color:#ffffff;
+        border:2px solid #1e3a8a;
+        font-weight:700;
+        box-shadow:none;
+    }
+  #spymasterBoard .card.type-Neutral {
+        background:#ffffff !important; /* white */
+        color:#000000;
+        border:2px solid #d1d5db;
+        font-weight:700;
+        box-shadow:none;
+    }
+
+ 
+ #spymasterBoard .card.type-Assassin { background:#000000 !important; color:#ffffff; font-weight:700; font-style:italic; border:2px solid #666666; box-shadow:0 0 0 1px #666666 inset; }
+ .winner { font-size:1.2rem; font-weight:700; color:#fcd34d; }
+ .log { max-width:880px; margin-top:1.2rem; background:#1e2530; padding:1rem; border-radius:8px; font-size:.8rem; color:#f5f7fa; }
+ .clue { margin-bottom:.25rem; }
+ .spymaster-toggle { margin-left:auto; display:flex; align-items:center; gap:.35rem; }
+ .correct-flash { animation: flash 0.8s ease; }
+ @keyframes flash { 0% { box-shadow:0 0 0 0 rgba(255,255,255,.9);} 100% { box-shadow:0 0 0 12px rgba(255,255,255,0);} }
+ #spymasterBoardPlaceholder { opacity:.6; font-size:.85rem; padding:.75rem .5rem; background:#1e2530; border:1px dashed #475569; border-radius:8px; min-height:310px; display:flex; align-items:center; justify-content:center; }
+ .mini-note { font-size:.65rem; font-weight:400; opacity:.7; margin-left:.4rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1 style="margin:0;font-size:1.4rem;">Codenames</h1>
+  <label>Start Team
+    <select id="startTeam">
+      <option value="Red">Red</option>
+      <option value="Blue">Blue</option>
+    </select>
+  </label>
+  <label>Seed <input id="seed" type="number" placeholder="(optional)"/></label>
+  <button id="newGameBtn">New Game</button>
+  <div id="gameIdDisplay"></div>
+  <label class="spymaster-toggle" title="Show roles (right side)">
+    <input type="checkbox" id="spymasterChk" /> Spymaster <span class="mini-note">(right panel)</span>
+  </label>
+</header>
+<div class="panel">
+  <div class="col">
+    <h3>Submit Clue</h3>
+    <div class="submit-clue-form">
+      <label>Team
+        <select id="clueTeam"></select>
+      </label>
+      <label>Clue
+        <input id="clueText"/>
+      </label>
+      <label>Count
+        <input id="clueCount" type="number" min="0" value="1"/>
+      </label>
+      <button id="submitClueBtn" disabled>Submit Clue</button>
+    </div>
+  </div>
+  <div class="col counts">
+    <h3>Counts</h3>
+    <div><span>Red Remaining: <strong id="redCount">-</strong></span><span>Blue Remaining: <strong id="blueCount">-</strong></span></div>
+    <div>Phase: <span id="phase">-</span></div>
+    <div>Current Team: <span id="currentTeam">-</span></div>
+    <div>Current Clue: <span id="currentClue">-</span></div>
+    <div>Guesses: <span id="guessProgress">-</span></div>
+    <div class="winner" id="winner"></div>
+  </div>
+</div>
+<div class="boards-wrapper">
+  <div class="board-column">
+    <h3>Operatives Board</h3>
+    <div class="board" id="board"></div>
+  </div>
+  <div class="board-column">
+    <h3>Spymaster Board</h3>
+    <div id="spymasterBoardPlaceholder">Toggle Spymaster to view full colored roles here.</div>
+    <div class="board" id="spymasterBoard" style="display:none;"></div>
+  </div>
+</div>
+<div class="log" id="clueLog"></div>
+<script>
+let gameId = null;
+const boardEl = document.getElementById('board');
+const spymasterBoardEl = document.getElementById('spymasterBoard');
+const spymasterPlaceholder = document.getElementById('spymasterBoardPlaceholder');
+const newBtn = document.getElementById('newGameBtn');
+const startTeamEl = document.getElementById('startTeam');
+const seedEl = document.getElementById('seed');
+const clueTeamEl = document.getElementById('clueTeam');
+const clueTextEl = document.getElementById('clueText');
+const clueCountEl = document.getElementById('clueCount');
+const submitClueBtn = document.getElementById('submitClueBtn');
+const redCountEl = document.getElementById('redCount');
+const blueCountEl = document.getElementById('blueCount');
+const phaseEl = document.getElementById('phase');
+const currentTeamEl = document.getElementById('currentTeam');
+const currentClueEl = document.getElementById('currentClue');
+const guessProgressEl = document.getElementById('guessProgress');
+const winnerEl = document.getElementById('winner');
+const clueLogEl = document.getElementById('clueLog');
+const gameIdDisplay = document.getElementById('gameIdDisplay');
+const spymasterChk = document.getElementById('spymasterChk');
+
+async function createGame(){
+  const body = { startingTeam: startTeamEl.value };
+  if(seedEl.value) body.seed = parseInt(seedEl.value,10);
+  const res = await fetch('/games', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if(!res.ok){ alert('Create failed'); return; }
+  const data = await res.json();
+  gameId = data.game.gameId;
+  gameIdDisplay.textContent = 'Game: ' + gameId;
+  clueTeamEl.innerHTML = `<option value="Red">Red</option><option value="Blue">Blue</option>`;
+  await refreshOperatives();
+  await refreshSpymaster();
+}
+
+async function refreshOperatives(){
+  if(!gameId) return;
+  const res = await fetch(`/games/${gameId}`); // non-spymaster
+  if(!res.ok) return;
+  const state = await res.json();
+  renderOperatives(state);
+}
+
+async function refreshSpymaster(){
+  if(!gameId) return;
+  if(!spymasterChk.checked){
+    spymasterBoardEl.style.display='none';
+    spymasterPlaceholder.style.display='flex';
+    spymasterBoardEl.innerHTML='';
+    return;
+  }
+  const res = await fetch(`/games/${gameId}?spymaster=true`);
+  if(!res.ok) return;
+  const state = await res.json();
+  renderSpymaster(state);
+}
+
+function renderOperatives(state){
+  redCountEl.textContent = state.redAgentsRemaining;
+  blueCountEl.textContent = state.blueAgentsRemaining;
+  phaseEl.textContent = state.phase;
+  currentTeamEl.textContent = state.currentTeam;
+  winnerEl.textContent = state.winner ? `Winner: ${state.winner}` : '';
+  const latestClue = state.clues.length ? state.clues[state.clues.length-1] : null;
+  currentClueEl.textContent = latestClue ? `${latestClue.text} (${latestClue.declaredCount})` : '-';
+  guessProgressEl.textContent = state.currentClueGuesses != null ? `${state.currentClueGuesses}/${state.currentClueMaxGuesses}` : '-';
+  submitClueBtn.disabled = !(state.phase === 'AwaitingClue');
+
+  boardEl.innerHTML='';
+  state.board.forEach(card => {
+    const div = document.createElement('div');
+    const classes = ['card'];
+    if(card.revealed){ classes.push('revealed','type-'+card.type); }
+    else { classes.push('covered'); }
+    div.className = classes.join(' ');
+    div.textContent = card.word; // words visible; only color after reveal
+    if(state.phase==='AwaitingGuesses' && !card.revealed && state.currentTeam === startTeamEl.value){
+      div.style.cursor='pointer';
+      div.onclick = () => makeGuess(card.position, div);
+    }
+    boardEl.appendChild(div);
+  });
+
+  clueLogEl.innerHTML = '<strong>Clues:</strong><br/>' + state.clues.map(c=>`<div class="clue">${c.team}: <em>${c.text}</em> (${c.declaredCount})</div>`).join('');
+}
+
+function renderSpymaster(state){
+  spymasterPlaceholder.style.display='none';
+  spymasterBoardEl.style.display='grid';
+  spymasterBoardEl.innerHTML='';
+  state.board.forEach(card => {
+    const div = document.createElement('div');
+    div.className = 'card type-'+card.type + (card.revealed ? ' revealed' : '');
+    // Show word only; styling makes Red/Blue/Neutral identical in spymaster view
+    div.textContent = card.word;
+    spymasterBoardEl.appendChild(div);
+  });
+}
+
+async function submitClue(){
+  if(!gameId) return;
+  const body = { team: clueTeamEl.value, clue: clueTextEl.value, count: parseInt(clueCountEl.value,10) };
+  const res = await fetch(`/games/${gameId}/clues`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if(!res.ok){ alert('Error submitting clue'); return; }
+  clueTextEl.value='';
+  clueCountEl.value='1';
+  await refreshOperatives();
+  await refreshSpymaster();
+}
+
+async function makeGuess(position, element){
+  const body = { team: startTeamEl.value, position };
+  const res = await fetch(`/games/${gameId}/guesses`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if(!res.ok){ alert('Guess error'); return; }
+  const result = await res.json();
+  if(result.outcome === 'FriendlyAgent'){
+    element.classList.remove('covered');
+    element.classList.add('type-'+startTeamEl.value,'revealed','correct-flash');
+  } else if(result.outcome === 'OpponentAgent') {
+    element.classList.remove('covered');
+    element.classList.add('revealed','type-'+ (startTeamEl.value === 'Red' ? 'Blue':'Red'));
+  } else if(result.outcome === 'Neutral') {
+    element.classList.remove('covered');
+    element.classList.add('revealed','type-Neutral');
+  } else if(result.outcome === 'Assassin') {
+    element.classList.remove('covered');
+    element.classList.add('revealed','type-Assassin');
+  }
+  await Promise.all([refreshOperatives(), refreshSpymaster()]);
+}
+
+newBtn.onclick = createGame;
+submitClueBtn.onclick = submitClue;
+spymasterChk.onchange = () => { refreshSpymaster(); };
+
+createGame();
+setInterval(()=>{ refreshOperatives(); refreshSpymaster(); }, 4000);
+</script>
+</body>
+</html>
