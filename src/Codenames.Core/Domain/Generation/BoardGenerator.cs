@@ -19,8 +19,8 @@ public sealed class BoardGenerator
         _wordProvider = wordProvider ?? throw new ArgumentNullException(nameof(wordProvider));
     }
 
-    private const int RedFull = 9;
-    private const int BlueFull = 8;
+    private const int RedCount = 9;
+    private const int BlueCount = 8;
     private const int NeutralCount = 7;
     private const int AssassinCount = 1;
 
@@ -28,14 +28,11 @@ public sealed class BoardGenerator
     {
         var rng = seed.HasValue ? new Random(seed.Value) : new Random();
 
-        var words = _wordProvider.GetWords(GameBoard.Size, rng)
-            .Take(GameBoard.Size)
-            .Select((w, i) => new { Word = w, Index = i })
-            .ToList();
+        var words = _wordProvider.GetWords(GameBoard.Size, rng);
 
         // assign types list with distribution then shuffle positions
-        var redAgents = startingTeam == Team.Red ? RedFull : BlueFull;
-        var blueAgents = startingTeam == Team.Red ? BlueFull : RedFull; // inverse if Blue starts
+        var redAgents = startingTeam == Team.Red ? RedCount : BlueCount;
+        var blueAgents = startingTeam == Team.Red ? BlueCount : RedCount; // inverse if Blue starts
 
         var types = new List<CardType>(GameBoard.Size);
         types.AddRange(Enumerable.Repeat(startingTeam == Team.Red ? CardType.RedAgent : CardType.BlueAgent, redAgents));
@@ -56,7 +53,7 @@ public sealed class BoardGenerator
         var cards = new GameCard[GameBoard.Size];
         for (int i = 0; i < GameBoard.Size; i++)
         {
-            cards[i] = new GameCard(i, words[i].Word, types[i]);
+            cards[i] = new GameCard(i, words[i], types[i]);
         }
         return GameBoard.Create(cards);
     }
