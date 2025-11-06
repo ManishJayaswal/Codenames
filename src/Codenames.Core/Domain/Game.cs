@@ -1,4 +1,5 @@
 using Codenames.Core.Domain.Enums;
+using Codenames.Core.Domain.Turns;
 
 namespace Codenames.Core.Domain;
 
@@ -20,8 +21,14 @@ public sealed class Game
     public IReadOnlyList<Clue> ClueHistory => _clueHistory;
     public Clue? CurrentClue => _clueHistory.LastOrDefault();
 
+    // Stage 7: Turn history tracking
+    private readonly List<TurnRecord> _turnHistory = new();
+    public IReadOnlyList<TurnRecord> TurnHistory => _turnHistory;
+    public CurrentTurn? CurrentTurn { get; private set; }
+
     // Number of guesses taken under the current (most recent) clue.
-    public int CurrentClueGuesses { get; private set; }
+    // Migrated to use CurrentTurn.GuessCount when available (Stage 7).
+    public int CurrentClueGuesses => CurrentTurn?.GuessCount ?? 0;
 
     private Game(Guid id, Team startingTeam, GameBoard board)
     {
@@ -32,7 +39,6 @@ public sealed class Game
         Board = board;
         RedAgentsRemaining = 0; // assigned in Stage 3 when generation logic is known
         BlueAgentsRemaining = 0;
-        CurrentClueGuesses = 0;
     }
 
     public static Game CreateNew(Guid? id = null, Team startingTeam = Team.Red)
@@ -58,16 +64,34 @@ public sealed class Game
 
     /// <summary>
     /// Adds a validated clue to the game and transitions phase to AwaitingGuesses.
-    /// Resets guess counter for the new clue.
+    /// Creates a new CurrentTurn to track guesses for this clue (Stage 7).
     /// </summary>
     internal void AddClue(Clue clue)
     {
         _clueHistory.Add(clue);
-        CurrentClueGuesses = 0;
+        CurrentTurn = new CurrentTurn(CurrentTeam, clue);
         Phase = GamePhase.AwaitingGuesses;
     }
 
-    internal void IncrementGuessCounter() => CurrentClueGuesses++;
+    /// <summary>
+    /// Records a guess in the current turn (Stage 7).
+    /// </summary>
+    internal void RecordGuess(GuessEvent guessEvent)
+    {
+        CurrentTurn?.AddGuess(guessEvent);
+    }
+
+    /// <summary>
+    /// Finalizes the current turn and adds it to history (Stage 7).
+    /// </summary>
+    internal void FinalizeTurn(bool voluntaryEnd, bool gameEnded, Team? winner)
+    {
+        if (CurrentTurn is not null)
+        {
+            _turnHistory.Add(CurrentTurn.ToRecord(voluntaryEnd, gameEnded, winner));
+            CurrentTurn = null;
+        }
+    }
 
     /// <summary>
     /// Reveals the card at the given index and applies outcome side-effects.

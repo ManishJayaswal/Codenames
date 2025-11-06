@@ -3,6 +3,7 @@ using Codenames.Core.Domain.Generation;
 using Codenames.Core.Domain.Clues;
 using Codenames.Core.Domain.Exceptions;
 using Codenames.Core.Domain.Guesses;
+using Codenames.Core.Domain.Turns;
 
 namespace Codenames.Core.Domain.Services;
 
@@ -57,6 +58,7 @@ public sealed class GameService
     /// Makes a guess at the specified position. Returns result info including whether turn/game ended.
     /// Enforces max guesses: declaredCount + 1 (extra guess rule) for the current clue.
     /// If the limit is reached after a correct guess that does not end the game, the turn ends.
+    /// Stage 7: Records guess events and finalizes turns in history.
     /// </summary>
     public GuessResult MakeGuess(Game game, Team team, int position)
     {
@@ -84,8 +86,9 @@ public sealed class GameService
             _ => throw new InvalidOperationException("Unexpected card type")
         };
 
-        // Increment guess counter only if the card revealed was an agent for current team (a valid continuing guess) OR opponent agent? Actually any successful reveal attempt counts toward guesses taken regardless of result, except assassin? Convention: count all revealed attempts.
-        game.IncrementGuessCounter();
+        // Stage 7: Record the guess event in the current turn.
+        var guessEvent = new GuessEvent(position, outcome, cardType);
+        game.RecordGuess(guessEvent);
 
         // Apply guess limit logic if still in guessing phase and not ended by card resolution.
         if (!turnEnds && !gameEnded)
@@ -99,12 +102,18 @@ public sealed class GameService
             }
         }
 
+        // Stage 7: Finalize turn if it ended or game ended.
+        if (turnEnds || gameEnded)
+        {
+            game.FinalizeTurn(voluntaryEnd: false, gameEnded, winner);
+        }
+
         return new GuessResult(position, outcome, team, turnEnds, gameEnded, winner);
     }
 
     /// <summary>
     /// Ends the current team's turn voluntarily during the guessing phase, passing control to the opponent.
-    /// Does nothing if the game already completed.
+    /// Stage 7: Finalizes turn in history.
     /// </summary>
     public void EndTurn(Game game, Team team)
     {
@@ -114,6 +123,9 @@ public sealed class GameService
         if (team != game.CurrentTeam)
             throw new TeamMismatchException($"Team {team} cannot end turn; current team is {game.CurrentTeam}.");
         if (game.Winner is not null) return; // already finished
+
+        // Stage 7: Finalize turn with voluntary end flag.
+        game.FinalizeTurn(voluntaryEnd: true, gameEnded: false, winner: null);
 
         // Transition to awaiting next clue for the opposing team.
         game.Phase = GamePhase.AwaitingClue;
