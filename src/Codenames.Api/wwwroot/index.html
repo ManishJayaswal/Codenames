@@ -8,15 +8,16 @@
  body { font-family: system-ui, Arial, sans-serif; margin: 1rem; background:#f3f4f6; color:#111; }
  header { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
  button { cursor:pointer; padding:.5rem .9rem; background:#2563eb; border:none; color:#fff; border-radius:4px; font-weight:600; }
- button.secondary { background:#475569; }
+ button.secondary { background:#2563eb; }
  button:disabled { opacity:.5; cursor:not-allowed; }
- input, select { padding:.45rem .5rem; border-radius:4px; border:1px solid #475569; background:#1e2530; color:#fff; }
+ input, select { padding:.45rem .5rem; border-radius:4px; border:1px solid #9ca3af; background:#6b7280; color:#fff; }
  .panel { margin-top:1rem; display:flex; gap:2rem; flex-wrap:wrap; }
  .col { min-width:220px; }
  .submit-clue-form { display:flex; flex-direction:column; align-items:flex-start; gap:.55rem; }
  .submit-clue-form label { display:flex; flex-direction:column; font-size:.8rem; font-weight:600; gap:.25rem; }
  .submit-clue-form button { margin-top:.9rem; }
  .counts span { display:inline-block; margin-right:1rem; }
+ .game-stats { border:2px solid #9ca3af; border-radius:8px; padding:1rem; background:#fff; }
  .boards-wrapper { display:flex; gap:3rem; align-items:flex-start; margin-top:1.25rem; }
  .board-column { min-width: 430px; }
  .board-column h3 { margin:.2rem 0 .4rem; font-size:1rem; letter-spacing:.5px; font-weight:600; }
@@ -24,52 +25,32 @@
  .card { aspect-ratio: 1.45/1; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:.35rem; text-align:center; font-size:.75rem; font-weight:600; letter-spacing:.5px; position:relative; user-select:none; transition:background .25s, transform .15s; }
  .card:hover { transform:translateY(-2px); }
  .card.revealed { filter:brightness(1.15); }
- /* High-contrast vivid team colors scoped ONLY to operatives board */
- #board .type-RedAgent { background:#525252; }
- #board .type-BlueAgent {background: #525252; }
- #board .type-Neutral { background:#525252; }
- #board .type-Assassin { background:#000; box-shadow:0 0 0 2px #fff inset; }
+ /* High-contrast vivid team colors for both boards */
+ .type-RedAgent { background:#dc2626; color:#f5f7fa; }
+ .type-BlueAgent { background:#2563eb; color:#f5f7fa; }
+ .type-Neutral { background:#a3a3a3; color:#f5f7fa; }
+ .type-Assassin { background:#000; color:#f5f7fa; box-shadow:0 0 0 2px #fff inset; }
  .covered { background:#2d3642; }
- /* Spymaster board base card style (no tint) */
- #spymasterBoard .card { border:2px solid #d1d5db; box-shadow:none; }
-/* Dark background container for spymaster board */
-#spymasterBoard { background:#1e2530 !important; border-radius:12px; }
 
-/* Lighter font color for all operative board cards */
-#board .card { color:#f5f7fa; }
+ /* Base card styles for both boards */
+ .card { color:#f5f7fa; }
 
-  /* Spymaster: differentiate light backgrounds, preserve original casing */
-  #spymasterBoard .card.type-RedAgent {
-        background:#ffe5e5 !important; /* light red */
-        color:#000000;
-        border:2px solid #f5c2c2;
-        font-weight:700;
-        box-shadow:none;
-    }
-  #spymasterBoard .card.type-BlueAgent {
-        background:#1e3a8a !important; /* dark blue */
-        color:#ffffff;
-        border:2px solid #1e3a8a;
-        font-weight:700;
-        box-shadow:none;
-    }
-  #spymasterBoard .card.type-Neutral {
-        background:#ffffff !important; /* white */
-        color:#000000;
-        border:2px solid #d1d5db;
-        font-weight:700;
-        box-shadow:none;
-    }
+ /* Spymaster board - same look as operatives board */
+ #spymasterBoard { background:#d1d5db; border-radius:12px; }
 
- 
- #spymasterBoard .card.type-Assassin { background:#000000 !important; color:#ffffff; font-weight:700; font-style:italic; border:2px solid #666666; box-shadow:0 0 0 1px #666666 inset; }
  .winner { font-size:1.2rem; font-weight:700; color:#fcd34d; }
  .log { max-width:880px; margin-top:1.2rem; background:#1e2530; padding:1rem; border-radius:8px; font-size:.8rem; color:#f5f7fa; }
+ .log h3 { margin:0 0 .75rem 0; font-size:1rem; color:#f5f7fa; }
+ .clue-columns { display:flex; gap:2rem; }
+ .clue-column { flex:1; }
+ .clue-column h4 { margin:0 0 .5rem 0; font-size:.85rem; font-weight:600; }
+ .clue-column.red h4 { color:#dc2626; }
+ .clue-column.blue h4 { color:#60a5fa; }
  .clue { margin-bottom:.25rem; }
  .spymaster-toggle { margin-left:auto; display:flex; align-items:center; gap:.35rem; }
  .correct-flash { animation: flash 0.8s ease; }
  @keyframes flash { 0% { box-shadow:0 0 0 0 rgba(255,255,255,.9);} 100% { box-shadow:0 0 0 12px rgba(255,255,255,0);} }
- #spymasterBoardPlaceholder { opacity:.6; font-size:.85rem; padding:.75rem .5rem; background:#1e2530; border:1px dashed #475569; border-radius:8px; min-height:310px; display:flex; align-items:center; justify-content:center; }
+ #spymasterBoardPlaceholder { opacity:.6; font-size:.85rem; padding:.75rem; background:#d1d5db; border:1px dashed #475569; border-radius:12px; width:100%; display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
  .mini-note { font-size:.65rem; font-weight:400; opacity:.7; margin-left:.4rem; }
 </style>
 </head>
@@ -106,13 +87,15 @@
     </div>
   </div>
   <div class="col counts">
-    <h3>Counts</h3>
-    <div><span>Red Remaining: <strong id="redCount">-</strong></span><span>Blue Remaining: <strong id="blueCount">-</strong></span></div>
-    <div>Phase: <span id="phase">-</span></div>
-    <div>Current Team: <span id="currentTeam">-</span></div>
-    <div>Current Clue: <span id="currentClue">-</span></div>
-    <div>Guesses: <span id="guessProgress">-</span></div>
-    <div class="winner" id="winner"></div>
+    <h3>Game Stats</h3>
+    <div class="game-stats">
+      <div><span>Red Remaining: <strong id="redCount">-</strong></span><span>Blue Remaining: <strong id="blueCount">-</strong></span></div>
+      <div>Phase: <span id="phase">-</span></div>
+      <div>Current Team: <span id="currentTeam">-</span></div>
+      <div>Current Clue: <span id="currentClue">-</span></div>
+      <div>Guesses: <span id="guessProgress">-</span></div>
+      <div class="winner" id="winner"></div>
+    </div>
     <button id="endTurnBtn" class="secondary" disabled style="margin-top:.6rem;">End Turn</button>
   </div>
 </div>
@@ -130,6 +113,7 @@
 <div class="log" id="clueLog"></div>
 <script>
 let gameId = null;
+let currentTeam = null;
 const boardEl = document.getElementById('board');
 const spymasterBoardEl = document.getElementById('spymasterBoard');
 const spymasterPlaceholder = document.getElementById('spymasterBoardPlaceholder');
@@ -152,15 +136,19 @@ const clueLogEl = document.getElementById('clueLog');
 const gameIdDisplay = document.getElementById('gameIdDisplay');
 const spymasterChk = document.getElementById('spymasterChk');
 
+// Initialize clue team dropdown with options
+clueTeamEl.innerHTML = `<option value="Red">Red</option><option value="Blue">Blue</option>`;
+clueTeamEl.value = startTeamEl.value;
+
 async function createGame(){
-  const body = { startingTeam: startTeamEl.value };
-  if(seedEl.value) body.seed = parseInt(seedEl.value,10);
-  const res = await fetch('/games', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-  if(!res.ok){ alert('Create failed'); return; }
+const body = { StartingTeam: startTeamEl.value };
+if(seedEl.value) body.Seed = parseInt(seedEl.value,10);
+const res = await fetch('/games', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+if(!res.ok){ alert('Create failed'); return; }
   const data = await res.json();
   gameId = data.game.gameId;
   gameIdDisplay.textContent = 'Game: ' + gameId;
-  clueTeamEl.innerHTML = `<option value="Red">Red</option><option value="Blue">Blue</option>`;
+  clueTeamEl.value = startTeamEl.value;
   await refreshOperatives();
   await refreshSpymaster();
 }
@@ -188,18 +176,32 @@ async function refreshSpymaster(){
 }
 
 function renderOperatives(state){
-  redCountEl.textContent = state.redAgentsRemaining;
-  blueCountEl.textContent = state.blueAgentsRemaining;
-  phaseEl.textContent = state.phase;
-  currentTeamEl.textContent = state.currentTeam;
-  winnerEl.textContent = state.winner ? `Winner: ${state.winner}` : '';
-  const latestClue = state.clues.length ? state.clues[state.clues.length-1] : null;
-  currentClueEl.textContent = latestClue ? `${latestClue.text} (${latestClue.declaredCount})` : '-';
-  guessProgressEl.textContent = state.currentClueGuesses != null ? `${state.currentClueGuesses}/${state.currentClueMaxGuesses}` : '-';
-  submitClueBtn.disabled = !(state.phase === 'AwaitingClue');
-  endTurnBtn.disabled = !(state.phase === 'AwaitingGuesses' && state.currentTeam === startTeamEl.value && !state.winner);
+currentTeam = state.currentTeam; // Track current team for guessing
+redCountEl.textContent = state.redAgentsRemaining;
+blueCountEl.textContent = state.blueAgentsRemaining;
+phaseEl.textContent = state.phase;
+currentTeamEl.textContent = state.currentTeam;
+winnerEl.textContent = state.winner ? `Winner: ${state.winner}` : '';
 
-  boardEl.innerHTML='';
+// Show current clue only during guessing phase, clear it when awaiting new clue
+if(state.phase === 'AwaitingGuesses' && state.clues.length > 0){
+  const latestClue = state.clues[state.clues.length-1];
+  currentClueEl.textContent = `${latestClue.text} (${latestClue.declaredCount})`;
+  guessProgressEl.textContent = state.currentClueGuesses != null ? `${state.currentClueGuesses}/${state.currentClueMaxGuesses}` : '-';
+} else {
+  currentClueEl.textContent = '-';
+  guessProgressEl.textContent = '-';
+}
+
+submitClueBtn.disabled = !(state.phase === 'AwaitingClue');
+endTurnBtn.disabled = !(state.phase === 'AwaitingGuesses' && !state.winner);
+
+// Sync clue team dropdown with current team when it's time to submit a clue
+if(state.phase === 'AwaitingClue'){
+  clueTeamEl.value = state.currentTeam;
+}
+
+boardEl.innerHTML='';
   state.board.forEach(card => {
     const div = document.createElement('div');
     const classes = ['card'];
@@ -207,23 +209,44 @@ function renderOperatives(state){
     else { classes.push('covered'); }
     div.className = classes.join(' ');
     div.textContent = card.word; // words visible; only color after reveal
-    if(state.phase==='AwaitingGuesses' && !card.revealed && state.currentTeam === startTeamEl.value){
+    if(state.phase==='AwaitingGuesses' && !card.revealed && !state.winner){
       div.style.cursor='pointer';
-      div.onclick = () => makeGuess(card.position, div);
+      div.onclick = () => makeGuess(card.position, div, state.currentTeam);
     }
-
-async function endTurn(){
-  if(!gameId) return;
-  const body = { team: startTeamEl.value };
-  const res = await fetch(`/games/${gameId}/endturn`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-  if(!res.ok){ alert('End turn error'); return; }
-  await refreshOperatives();
-  await refreshSpymaster();
-}
     boardEl.appendChild(div);
   });
 
-  clueLogEl.innerHTML = '<strong>Clues:</strong><br/>' + state.clues.map(c=>`<div class="clue">${c.team}: <em>${c.text}</em> (${c.declaredCount})</div>`).join('');
+  // Render clue history in two columns by team
+  const redClues = state.clues.filter(c => c.team === 'Red');
+  const blueClues = state.clues.filter(c => c.team === 'Blue');
+  clueLogEl.innerHTML = `
+    <h3>Clues History</h3>
+    <div class="clue-columns">
+      <div class="clue-column red">
+        <h4>Red Team</h4>
+        ${redClues.length ? redClues.map(c => `<div class="clue"><em>${c.text}</em> (${c.declaredCount})</div>`).join('') : '<div class="clue">-</div>'}
+      </div>
+      <div class="clue-column blue">
+        <h4>Blue Team</h4>
+        ${blueClues.length ? blueClues.map(c => `<div class="clue"><em>${c.text}</em> (${c.declaredCount})</div>`).join('') : '<div class="clue">-</div>'}
+      </div>
+    </div>
+  `;
+
+  // Sync placeholder size with operatives board
+  requestAnimationFrame(() => {
+    spymasterPlaceholder.style.height = boardEl.offsetHeight + 'px';
+    spymasterPlaceholder.style.width = boardEl.offsetWidth + 'px';
+  });
+}
+
+async function endTurn(){
+if(!gameId || !currentTeam) return;
+const body = { Team: currentTeam };
+const res = await fetch(`/games/${gameId}/endturn`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if(!res.ok){ alert('End turn error'); return; }
+  await refreshOperatives();
+  await refreshSpymaster();
 }
 
 function renderSpymaster(state){
@@ -241,26 +264,30 @@ function renderSpymaster(state){
 
 async function submitClue(){
   if(!gameId) return;
-  const body = { team: clueTeamEl.value, clue: clueTextEl.value, count: parseInt(clueCountEl.value,10) };
+  const body = { Team: clueTeamEl.value, Clue: clueTextEl.value, Count: parseInt(clueCountEl.value,10) };
   const res = await fetch(`/games/${gameId}/clues`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-  if(!res.ok){ alert('Error submitting clue'); return; }
+  if(!res.ok){ 
+    const err = await res.json().catch(() => null);
+    alert('Error submitting clue: ' + (err?.error || res.statusText)); 
+    return; 
+  }
   clueTextEl.value='';
   clueCountEl.value='1';
   await refreshOperatives();
   await refreshSpymaster();
 }
 
-async function makeGuess(position, element){
-  const body = { team: startTeamEl.value, position };
-  const res = await fetch(`/games/${gameId}/guesses`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+async function makeGuess(position, element, team){
+const body = { Team: team, Position: position };
+const res = await fetch(`/games/${gameId}/guesses`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
   if(!res.ok){ alert('Guess error'); return; }
   const result = await res.json();
   if(result.outcome === 'FriendlyAgent'){
     element.classList.remove('covered');
-    element.classList.add('type-'+startTeamEl.value,'revealed','correct-flash');
+    element.classList.add('type-'+(team === 'Red' ? 'RedAgent' : 'BlueAgent'),'revealed','correct-flash');
   } else if(result.outcome === 'OpponentAgent') {
     element.classList.remove('covered');
-    element.classList.add('revealed','type-'+ (startTeamEl.value === 'Red' ? 'Blue':'Red'));
+    element.classList.add('revealed','type-'+ (team === 'Red' ? 'BlueAgent':'RedAgent'));
   } else if(result.outcome === 'Neutral') {
     element.classList.remove('covered');
     element.classList.add('revealed','type-Neutral');
@@ -275,6 +302,13 @@ newBtn.onclick = createGame;
 submitClueBtn.onclick = submitClue;
 spymasterChk.onchange = () => { refreshSpymaster(); };
 endTurnBtn.onclick = endTurn;
+
+// Sync clue team dropdown when start team is changed (before game starts)
+startTeamEl.onchange = () => {
+  if(!gameId || clueTeamEl.options.length === 0) return;
+  clueTeamEl.value = startTeamEl.value;
+  currentTeamEl.textContent = startTeamEl.value;
+};
 
 createGame();
 setInterval(()=>{ refreshOperatives(); refreshSpymaster(); }, 4000);
