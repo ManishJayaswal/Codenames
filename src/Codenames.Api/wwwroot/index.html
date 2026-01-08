@@ -6,7 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
  body { font-family: system-ui, Arial, sans-serif; margin: 1rem; background:#f3f4f6; color:#111; }
- header { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+ .top-bar { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem; }
+ .top-bar h1 { margin:0; font-size:1.4rem; }
+ .top-right { display:flex; flex-direction:column; align-items:flex-end; gap:.25rem; }
+ .spymaster-toggle { display:flex; align-items:center; gap:.35rem; }
+ .game-id { font-size:.75rem; color:#6b7280; }
+ .controls { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:.5rem; }
  button { cursor:pointer; padding:.5rem .9rem; background:#2563eb; border:none; color:#fff; border-radius:4px; font-weight:600; }
  button.secondary { background:#2563eb; }
  button:disabled { opacity:.5; cursor:not-allowed; }
@@ -47,16 +52,22 @@
  .clue-column.red h4 { color:#dc2626; }
  .clue-column.blue h4 { color:#60a5fa; }
  .clue { margin-bottom:.25rem; }
- .spymaster-toggle { margin-left:auto; display:flex; align-items:center; gap:.35rem; }
  .correct-flash { animation: flash 0.8s ease; }
  @keyframes flash { 0% { box-shadow:0 0 0 0 rgba(255,255,255,.9);} 100% { box-shadow:0 0 0 12px rgba(255,255,255,0);} }
  #spymasterBoardPlaceholder { opacity:.6; font-size:.85rem; padding:.75rem; background:#d1d5db; border:1px dashed #475569; border-radius:12px; width:100%; display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
- .mini-note { font-size:.65rem; font-weight:400; opacity:.7; margin-left:.4rem; }
 </style>
 </head>
 <body>
-<header>
-  <h1 style="margin:0;font-size:1.4rem;">Codenames</h1>
+<div class="top-bar">
+  <h1>Codenames</h1>
+  <div class="top-right">
+    <label class="spymaster-toggle" title="Show roles (right side)">
+      <input type="checkbox" id="spymasterChk" /> Spymaster
+    </label>
+    <div class="game-id" id="gameIdDisplay"></div>
+  </div>
+</div>
+<div class="controls">
   <label>Start Team
     <select id="startTeam">
       <option value="Red">Red</option>
@@ -65,11 +76,7 @@
   </label>
   <label>Seed <input id="seed" type="number" placeholder="(optional)"/></label>
   <button id="newGameBtn">New Game</button>
-  <div id="gameIdDisplay"></div>
-  <label class="spymaster-toggle" title="Show roles (right side)">
-    <input type="checkbox" id="spymasterChk" /> Spymaster <span class="mini-note">(right panel)</span>
-  </label>
-</header>
+</div>
 <div class="panel">
   <div class="col">
     <h3>Submit Clue</h3>

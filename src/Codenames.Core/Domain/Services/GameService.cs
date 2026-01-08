@@ -97,13 +97,12 @@ public sealed class GameService
             {
                 // Force turn end due to reaching guess cap.
                 turnEnds = true;
-                game.Phase = GamePhase.AwaitingClue;
-                game.CurrentTeam = team == Team.Red ? Team.Blue : Team.Red;
+                game.ForceEndTurnDueToGuessLimit();
             }
         }
 
-        // Stage 7: Finalize turn if it ended or game ended.
-        if (turnEnds || gameEnded)
+        // Stage 7: Finalize turn if it ended or game ended (and not already finalized by guess limit).
+        if ((turnEnds || gameEnded) && game.CurrentTurn is not null)
         {
             game.FinalizeTurn(voluntaryEnd: false, gameEnded, winner);
         }
@@ -113,7 +112,6 @@ public sealed class GameService
 
     /// <summary>
     /// Ends the current team's turn voluntarily during the guessing phase, passing control to the opponent.
-    /// Stage 7: Finalizes turn in history.
     /// </summary>
     public void EndTurn(Game game, Team team)
     {
@@ -122,13 +120,7 @@ public sealed class GameService
             throw new InvalidPhaseException("EndTurn", GamePhase.AwaitingGuesses.ToString(), game.Phase.ToString());
         if (team != game.CurrentTeam)
             throw new TeamMismatchException($"Team {team} cannot end turn; current team is {game.CurrentTeam}.");
-        if (game.Winner is not null) return; // already finished
 
-        // Stage 7: Finalize turn with voluntary end flag.
-        game.FinalizeTurn(voluntaryEnd: true, gameEnded: false, winner: null);
-
-        // Transition to awaiting next clue for the opposing team.
-        game.Phase = GamePhase.AwaitingClue;
-        game.CurrentTeam = team == Team.Red ? Team.Blue : Team.Red;
+        game.EndTurnVoluntarily();
     }
 }

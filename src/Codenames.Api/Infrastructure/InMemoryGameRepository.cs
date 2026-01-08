@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Codenames.Core.Domain;
+using Codenames.Core.Domain.Abstractions;
 
 namespace Codenames.Api.Infrastructure;
 

@@ -94,6 +94,28 @@ public sealed class Game
     }
 
     /// <summary>
+    /// Ends the current turn voluntarily, passing control to the opposing team.
+    /// </summary>
+    internal void EndTurnVoluntarily()
+    {
+        if (Winner is not null) return; // game already finished
+
+        FinalizeTurn(voluntaryEnd: true, gameEnded: false, winner: null);
+        Phase = GamePhase.AwaitingClue;
+        CurrentTeam = CurrentTeam == Team.Red ? Team.Blue : Team.Red;
+    }
+
+    /// <summary>
+    /// Forces the turn to end because the guess limit was reached.
+    /// </summary>
+    internal void ForceEndTurnDueToGuessLimit()
+    {
+        FinalizeTurn(voluntaryEnd: false, gameEnded: false, winner: null);
+        Phase = GamePhase.AwaitingClue;
+        CurrentTeam = CurrentTeam == Team.Red ? Team.Blue : Team.Red;
+    }
+
+    /// <summary>
     /// Reveals the card at the given index and applies outcome side-effects.
     /// Returns tuple: (cardType, turnEnds, gameEnded, winner, outcomeCategoryString)
     /// Actual interpretation into GuessOutcome occurs in service layer to keep enum dependency localized.
