@@ -11,7 +11,7 @@ public class BoardGenerationTests
 
     [Theory]
     [InlineData(Team.Red, 9, 8)]
-    [InlineData(Team.Blue, 8, 9)]
+    [InlineData(Team.Blue, 9, 8)]
     public void Board_HasExpectedDistribution(Team startingTeam, int expectedStartingAgents, int expectedOtherAgents)
     {
         var gen = CreateGenerator();
